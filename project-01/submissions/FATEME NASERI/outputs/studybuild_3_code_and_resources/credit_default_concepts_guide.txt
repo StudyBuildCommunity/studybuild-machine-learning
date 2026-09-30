@@ -1,0 +1,202 @@
+Credit Card Default Prediction — Concepts Guide
+====================================================
+
+1. Classification & Credit Default Prediction
+----------------------------------------------
+This project is a binary classification problem. The goal is to predict whether a customer will default on their credit card payment next month.
+
+The target variable has two classes:
+- 0 = No default
+- 1 = Default
+
+The input variables (features) describe customer characteristics, credit limits, repayment history, bill amounts, and payment amounts.
+
+In this project, the model is used for risk screening and prioritization rather than making automatic credit approval or rejection decisions.
+
+2. Data Preprocessing
+---------------------
+Before modeling, the data must be cleaned and transformed into a suitable format.
+
+ID was removed because it is an identifier and does not contain meaningful predictive information.
+
+Some categorical values were also cleaned:
+- EDUCATION categories 0, 5, and 6 were grouped into category 4.
+- MARRIAGE category 0 was grouped into category 3.
+
+Categorical variables were converted using One-Hot Encoding. This allows the model to work with categories without incorrectly assuming that category numbers have a meaningful mathematical order.
+
+The data was divided into Training, Validation, and Test sets. Transformations such as scaling were fitted only on the training data to prevent data leakage.
+
+3. Feature Engineering & Transformation
+----------------------------------------
+A new feature called N_DELAY_MONTHS was created:
+
+N_DELAY_MONTHS = number of months with a positive payment-delay value.
+
+This feature summarizes the customer's repayment-delay history into a single interpretable variable.
+
+Financial variables such as credit limits, bill amounts, and payment amounts can be highly skewed. A signed log transformation was therefore applied to reduce the influence of extreme values while preserving the sign of the original value.
+
+RobustScaler was used for numerical variables because it is less sensitive to outliers than standard scaling.
+
+4. Class Imbalance
+------------------
+The dataset is imbalanced:
+- No default: 77.88%
+- Default: 22.12%
+
+Accuracy alone can therefore be misleading. For example, a model that predicts every customer as "No Default" would already achieve about 78% accuracy while completely failing to identify defaulters.
+
+Important metrics include:
+- Precision: Of predicted defaulters, how many actually defaulted?
+- Recall: Of actual defaulters, how many were detected?
+- F1-score: Balance between precision and recall.
+- ROC-AUC: Measures ranking/discrimination across thresholds.
+- PR-AUC: Particularly informative when the positive class is relatively uncommon.
+
+Several imbalance strategies were considered. SMOTE was tested but did not improve PR-AUC, so the final model used:
+
+class_weight="balanced"
+
+5. Logistic Regression & LASSO
+------------------------------
+Logistic Regression is a classification algorithm that estimates the probability of the positive class.
+
+The model produces a probability such as:
+
+P(Default) = 0.72
+
+A coefficient represents the effect of a feature on the model's log-odds, while the Odds Ratio is:
+
+Odds Ratio = exp(coefficient)
+
+An Odds Ratio above 1 indicates higher modeled odds of default, while an Odds Ratio below 1 indicates lower modeled odds, holding other model variables constant.
+
+LASSO is Logistic Regression with L1 regularization. It can shrink some coefficients toward zero and can therefore perform feature selection.
+
+In this project, Logistic Regression and LASSO had almost identical cross-validation performance. Logistic Regression was selected because it provided similar predictive performance with a simpler interpretation.
+
+6. Threshold Selection & Business Cost
+---------------------------------------
+A classification model produces probabilities, but a business decision often requires a binary prediction.
+
+The default threshold of 0.50 is not necessarily optimal.
+
+Two types of errors are important:
+
+False Positive (FP):
+A customer is predicted as a defaulter but does not actually default.
+
+False Negative (FN):
+A customer is predicted as non-default but actually defaults.
+
+For this project, missing a real defaulter was considered more costly:
+
+FP Cost = 1
+FN Cost = 5
+
+Total Cost = FP × 1 + FN × 5
+
+The threshold was therefore selected using the Validation set rather than the Test set.
+
+Two thresholds were compared:
+
+Threshold 0.30:
+- Precision: 28.3%
+- Recall: 89.3%
+- FP: 3009
+- FN: 142
+- Cost: 3719
+
+Threshold 0.37:
+- Precision: 35.0%
+- Recall: 77.5%
+- FP: 1907
+- FN: 299
+- Cost: 3402
+
+Although threshold 0.30 detected more defaulters, threshold 0.37 produced the lower total business cost under the chosen cost assumptions.
+
+7. Risk Segmentation
+--------------------
+Classification threshold and risk-group cutoffs are different concepts.
+
+The classification threshold determines whether the model predicts "Default" or "No Default."
+
+Risk segmentation groups customers according to their predicted probability:
+
+Low Risk:
+P(Default) < 0.30
+
+Medium Risk:
+0.30 <= P(Default) < 0.60
+
+High Risk:
+P(Default) >= 0.60
+
+Validation results showed a clear increase in observed default rate:
+
+- Low Risk: 51.08% of customers; 9.76% default rate
+- Medium Risk: 33.33% of customers; 24.20% default rate
+- High Risk: 15.58% of customers; 58.18% default rate
+
+This monotonic increase suggests that the probability-based segmentation is useful for prioritizing customers by observed risk.
+
+8. Model Evaluation & Interpretation
+------------------------------------
+The final model was evaluated once on the untouched Test set using the selected threshold of 0.37.
+
+Results:
+- ROC-AUC: 0.7475
+- PR-AUC: 0.5026
+- Brier Score: 0.1926
+- Default Recall: 75.89%
+- Default Precision: 33.49%
+
+Confusion Matrix:
+
+                Predicted
+              No Default   Default
+Actual No Default   2673      2000
+Actual Default       320      1007
+
+The model identified 1007 of 1327 actual defaults and missed 320.
+
+ROC-AUC evaluates how well the model separates the two classes across different thresholds. PR-AUC focuses more directly on precision-recall performance for the positive class.
+
+The Brier Score measures the accuracy of probabilistic predictions. Lower values indicate better probability calibration, although the score should be interpreted in context.
+
+9. Important Model Signals
+--------------------------
+Some of the strongest positive risk signals included:
+
+- N_DELAY_MONTHS: Odds Ratio ≈ 1.59
+- PAY_0: Odds Ratio ≈ 1.37
+
+A higher number of delayed-payment months was associated with higher modeled default odds.
+
+LIMIT_BAL had an Odds Ratio below 1 (≈ 0.68), indicating lower modeled default odds as the transformed credit-limit feature increased, holding other variables constant.
+
+These relationships are model associations, not proof of causation.
+
+10. Business Interpretation & Limitations
+------------------------------------------
+The model should be used as a decision-support and risk-prioritization tool.
+
+A practical workflow could be:
+- High Risk → closer review and monitoring
+- Medium Risk → additional assessment
+- Low Risk → normal processing
+
+However, the model is not perfect. A precision of 33.49% means many customers flagged as potential defaulters are not actual defaulters, while a recall of 75.89% means some real defaulters are still missed.
+
+Before real-world deployment, the model should be tested on new data, calibrated if necessary, evaluated for fairness and subgroup performance, and monitored for data/model drift. Business costs and thresholds should also be reviewed periodically.
+
+Final Takeaways
+---------------
+1. The project demonstrates a complete binary classification workflow.
+2. Preprocessing and feature engineering improved the model's ability to learn meaningful patterns.
+3. Class imbalance was handled using class-weighted Logistic Regression.
+4. Threshold selection was based on business cost rather than the arbitrary 0.50 cutoff.
+5. Probability-based risk groups provided a practical way to prioritize customers.
+6. The final model is interpretable and useful for screening, but it should not be treated as a perfect or causal prediction system.

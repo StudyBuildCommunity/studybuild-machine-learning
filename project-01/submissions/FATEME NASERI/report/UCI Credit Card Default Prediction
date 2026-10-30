@@ -1,0 +1,59 @@
+# Credit Card Default Prediction
+
+## What We Did
+
+1. **Data Understanding**
+
+   * Explored the UCI Credit Card Clients dataset.
+   * Checked data types, missing values, distributions, and class balance.
+
+2. **EDA**
+
+   * Investigated relationships between customer characteristics, payment history, credit limits, and default.
+
+3. **Preprocessing**
+
+   * One-hot encoded categorical variables.
+   * Applied signed log transformation and RobustScaler to skewed numerical variables.
+   * Kept meaningful zero/negative values and did not remove valid outliers.
+
+4. **Class Imbalance**
+
+   * Tested SMOTE.
+   * Compared performance and decided not to use it in the final model.
+
+5. **Feature Engineering**
+
+   * Created `N_DELAY_MONTHS`.
+   * Tested several engineered features and kept the most useful one.
+
+6. **Modeling**
+
+   * Trained Logistic Regression and Decision Tree models.
+   * Used Stratified 5-Fold Cross-Validation for hyperparameter tuning.
+
+7. **Threshold Optimization**
+
+   * Selected the classification threshold on the validation set.
+   * Used a business cost of `FP = 1` and `FN = 5`.
+
+8. **Final Evaluation**
+
+   * Retrained models using Train + Validation data.
+   * Evaluated only once on the untouched Test set.
+
+## Final Results
+
+| Metric       | Logistic Regression | Decision Tree |
+| ------------ | ------------------: | ------------: |
+| Test ROC-AUC |              0.7473 |    **0.7559** |
+| Test PR-AUC  |              0.5039 |    **0.5180** |
+| Brier Score  |              0.1937 |    **0.1886** |
+| Precision    |              0.3478 |    **0.3596** |
+| Recall       |          **0.7295** |        0.7189 |
+| F1-Score     |              0.4710 |    **0.4794** |
+| Total Cost   |                3610 |      **3564** |
+
+## Output
+
+The Decision Tree showed a modest improvement across several metrics, while Logistic Regression achieved slightly higher recall. Both models provided useful performance for identifying customers at risk of default.

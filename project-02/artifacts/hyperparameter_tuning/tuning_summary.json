@@ -1,0 +1,80 @@
+{
+  "XGBoost": {
+    "best_params": {
+      "n_estimators": 300,
+      "max_depth": 7,
+      "learning_rate": 0.014516818317914373,
+      "min_child_weight": 20,
+      "subsample": 0.6939093754282633,
+      "colsample_bytree": 0.8201983077240481,
+      "colsample_bylevel": 0.6365424810823639,
+      "gamma": 0.05483048538134576,
+      "reg_alpha": 1.3885959872735404e-08,
+      "reg_lambda": 0.11482569801251837,
+      "max_delta_step": 0
+    },
+    "best_cv_rmse": 485.5363037109375,
+    "test_metrics": {
+      "n_features": 25.0,
+      "n_train": 32460.0,
+      "best_cv_rmse": 485.5363,
+      "train R2": 0.9535,
+      "test R2": 0.9441,
+      "train RMSE": 428.9383,
+      "test RMSE": 465.837,
+      "test MAE": 265.248,
+      "test MAPE (%)": 13.4167
+    }
+  },
+  "LightGBM": {
+    "best_params": {
+      "max_depth": 9,
+      "n_estimators": 400,
+      "num_leaves": 53,
+      "learning_rate": 0.013812891370390198,
+      "min_child_samples": 71,
+      "subsample": 0.6053646188379995,
+      "subsample_freq": 4,
+      "colsample_bytree": 0.6002409136762478,
+      "reg_alpha": 0.007411349701762799,
+      "reg_lambda": 0.16098416768715912,
+      "min_split_gain": 0.12512057699989546
+    },
+    "best_cv_rmse": 484.6183754358748,
+    "test_metrics": {
+      "n_features": 25.0,
+      "n_train": 32460.0,
+      "best_cv_rmse": 484.6184,
+      "train R2": 0.9543,
+      "test R2": 0.9439,
+      "train RMSE": 425.2945,
+      "test RMSE": 466.5627,
+      "test MAE": 263.7058,
+      "test MAPE (%)": 13.3677
+    }
+  },
+  "RandomForest": {
+    "best_params": {
+      "bootstrap": true,
+      "n_estimators": 800,
+      "max_depth": 16,
+      "min_samples_split": 9,
+      "min_samples_leaf": 4,
+      "max_features": "sqrt",
+      "ccp_alpha": 3.233056948055394e-08,
+      "max_samples": 0.9070216197348927
+    },
+    "best_cv_rmse": 484.26590526079326,
+    "test_metrics": {
+      "n_features": 25.0,
+      "n_train": 32460.0,
+      "best_cv_rmse": 484.2659,
+      "train R2": 0.9617,
+      "test R2": 0.9446,
+      "train RMSE": 388.9369,
+      "test RMSE": 463.7611,
+      "test MAE": 263.4351,
+      "test MAPE (%)": 12.5938
+    }
+  }
+}

@@ -27,6 +27,40 @@ The data were collected from Minnesota Department of Transportation Automatic Tr
 | `traffic_volume` | Integer | Hourly westbound traffic volume reported by ATR station 301 |
 
 
+## 📁 Project Structure
+
+```text
+.
+├── README.md
+├── data/
+│   ├── Metro_Interstate_Traffic_Volume.csv
+│   └── data_cleaning.csv
+├── notebooks/
+│   ├── traffic-analysis.ipynb
+│   └── traffic_volume_prediction.ipynb
+└── artifacts/
+    ├── evaluation_reports/
+    │   ├── cv_folds.csv
+    │   ├── legacy_predictions.csv
+    │   └── weather_group.csv
+    ├── hyperparameter_tuning/
+    │   ├── LightGBM_trials.csv
+    │   ├── optuna_history.db
+    │   ├── RandomForest_trials.csv
+    │   ├── tuning_summary.json
+    │   └── XGBoost_trials.csv
+    └── trained_models/
+        ├── LightGBM_optimizer.joblib
+        ├── RandomForest_optimizer.joblib
+        └── XGBoost_optimizer.joblib
+```
+
+- **`data/`** contains the original dataset and the cleaned, feature-engineered dataset used in modeling.
+- **`notebooks/`** contains the exploratory analysis and the main notebook covering data preparation, regression models, optimization, and final evaluation.
+- **`artifacts/evaluation_reports/`** stores cross-validation, prediction, and weather-group evaluation outputs.
+- **`artifacts/hyperparameter_tuning/`** contains Optuna trial results and optimization history for Random Forest, XGBoost, and LightGBM.
+- **`artifacts/trained_models/`** contains the saved optimized model objects.
+
 ## 🧹 Data Cleaning & Feature Engineering
 
 The raw dataset was cleaned and prepared through a separate reproducible data-cleaning and feature-engineering process.
@@ -53,6 +87,7 @@ New features were created to capture important traffic patterns, including:
 
 The final dataset contains **40,575 observations, 23 model features, the `traffic_volume` target, and 4 QA columns**. QA columns are used only for validation and are not used for model training.
 
+📓 **Notebook:** [`traffic_volume_prediction.ipynb` — Section 4](<notebooks/traffic_volume_prediction.ipynb#4>).
 📓 **Cleaned Dataset:** `data/data_cleaning.csv`
 
 ## 📈 Linear Regression Modeling
@@ -69,7 +104,7 @@ The cleaned hourly data were modeled with ordinary least-squares linear regressi
 
 *RMSE and MAE are in vehicles per hour, computed on the chronological test set.*
 
-The decision to leave weather labels out of the features was also tested. The 37 textual weather descriptions were merged into six groups with a similar effect on driving conditions (clear/cloudy, reduced visibility such as mist, fog, haze and smoke, light rain/drizzle, heavy rain, snow/ice, and severe storms covering thunderstorms and squalls). Adding these groups to the baseline changed the test RMSE only from 744.9 to 744.0, and a partial F-test found no significant gain (p = 0.30); removing all weather information costs only about 2 RMSE units, so hour of day and weekday dominate hourly traffic in a linear model. These results support the choice to exclude the labels, with two caveats: a linear model cannot capture interactions such as fog mattering more during rush hour, and the severe-storm group has only 239 hours. 📓 **Notebook:** `notebooks/traffic_volume_prediction.ipynb` (sections 5,6).
+The decision to leave weather labels out of the features was also tested. The 37 textual weather descriptions were merged into six groups with a similar effect on driving conditions (clear/cloudy, reduced visibility such as mist, fog, haze and smoke, light rain/drizzle, heavy rain, snow/ice, and severe storms covering thunderstorms and squalls). Adding these groups to the baseline changed the test RMSE only from 744.9 to 744.0, and a partial F-test found no significant gain (p = 0.30); removing all weather information costs only about 2 RMSE units, so hour of day and weekday dominate hourly traffic in a linear model. These results support the choice to exclude the labels, with two caveats: a linear model cannot capture interactions such as fog mattering more during rush hour, and the severe-storm group has only 239 hours. 📓 **Notebook:** [`traffic_volume_prediction.ipynb` — Sections 5–6](<notebooks/traffic_volume_prediction.ipynb#5>).
 
 ## 🌲 Random Forest Modeling
 
@@ -112,7 +147,7 @@ Permutation importance measures the increase in test RMSE after shuffling an inp
 
 The notebook also examines errors by hour, weekday/weekend, and season. On the test set, summer has the lowest seasonal MAE (202.9 vehicles/hour), while winter has the highest (332.0). Weekend bias is −50.1 vehicles/hour and spring bias is −71.0, where bias is defined as actual minus predicted; negative values indicate average overprediction. These breakdowns show that overall scores do not describe performance equally well for every time segment.
 
-📓 **Notebook:** `notebooks/traffic_volume_prediction.ipynb` (Section 7).
+📓 **Notebook:** [`traffic_volume_prediction.ipynb` — Section 7](<notebooks/traffic_volume_prediction.ipynb#7>).
 
 ## ⚡ XGBoost & LightGBM Modeling
 
@@ -139,7 +174,7 @@ For XGBoost, the most influential features were `hour_cos` (1,048.44), `hour` (8
 
 These findings reinforce the importance of daily and weekly traffic patterns. Permutation importance reflects how much a model relies on a feature for prediction; it does not establish a causal relationship.
 
-📓 **Notebook:** `notebooks/traffic_volume_prediction.ipynb` (section 8).
+📓 **Notebook:** [`traffic_volume_prediction.ipynb` — Section 8](<notebooks/traffic_volume_prediction.ipynb#8>).
 
 ## 🔬 Hyperparameter Tuning + Model Evaluation
 
@@ -195,7 +230,7 @@ To interpret the tuning behavior and verify out-of-sample reliability for the wi
 - **Residuals by Hour of Day:** The mean residual (white line) stays flat near zero across the entire 24-hour cycle, proving the model maintains no systematic diurnal bias. However, the error variance (purple shaded area, **±1 std**) widens noticeably during volatile rush hours (**6 AM – 9 AM** and **3 PM – 6 PM**).
 - **Last 7 Days of the Test Period:** The chronological overlay for the final test week (**2018-09-24 to 2018-10-01**) confirms exceptional tracking precision across both bimodal weekday rush-hour peaks and unimodal weekend traffic drops.
 
-📓 **Notebook:** `notebooks/traffic_volume_prediction.ipynb` (Section 9).
+📓 **Notebook:** [`traffic_volume_prediction.ipynb` — Section 9](<notebooks/traffic_volume_prediction.ipynb#9>).
 
 ## 10. Final Model & Final Analysis
 
@@ -326,3 +361,19 @@ The final Random Forest model achieved strong predictive performance on the test
 The analysis showed that hour-of-day and commute patterns were the most influential feature group, followed by weekday/weekend patterns. However, performance was not uniform across all conditions. Holiday periods accounted for a disproportionate share of prediction errors, while low-volume traffic and reduced-visibility conditions presented additional challenges.
 
 **Overall, the model captures routine traffic patterns well, but its predictions are less reliable when traffic deviates from typical patterns.** Improving holiday labels and data quality, detecting potential sensor anomalies, evaluating temporal features, and validating the model on independent data are important next steps toward a more robust traffic forecasting system.
+
+📓 **Notebook:** [`traffic_volume_prediction.ipynb` — Section 10](<notebooks/traffic_volume_prediction.ipynb#10>).
+
+## 👥 Contributors
+
+The project was developed collaboratively. The table below maps the project sections to the team members responsible for them.
+
+| Project Sections | Contributor |
+|---|---|
+| [1. Metadata](<notebooks/traffic_volume_prediction.ipynb#1>), [2. Exploratory Data Analysis](<notebooks/traffic_volume_prediction.ipynb#2>), [3. Data Visualization](<notebooks/traffic_volume_prediction.ipynb#3>) | [Samane Najarian](https://github.com/SamaneNajarian) |
+| [4. Data Cleaning & Feature Engineering](<notebooks/traffic_volume_prediction.ipynb#4>) | [Morteza Abbasi](https://github.com/morteza-codi) |
+| [5. Linear Regression](<notebooks/traffic_volume_prediction.ipynb#5>), [6. Weather Groups — Does Removing the Weather Labels Matter?](<notebooks/traffic_volume_prediction.ipynb#6>) | [Fateme Naseri](https://github.com/fatemenaseri) |
+| [7. Random Forest](<notebooks/traffic_volume_prediction.ipynb#7>) | [Mona Zareian](https://github.com/mona-az) |
+| [8. XGBoost & LightGBM](<notebooks/traffic_volume_prediction.ipynb#8>) | [Maral Farahmandfar](https://github.com/MaralFarahmandfar) |
+| [9. Hyperparameter Tuning + Model Evaluation](<notebooks/traffic_volume_prediction.ipynb#9>) | [Alireza Naghdi](https://github.com/Alirezanaghdi-dev) |
+| [10. Final Model & Final Analysis](<notebooks/traffic_volume_prediction.ipynb#10>) | [Fateme Naseri](https://github.com/fatemenaseri) |
